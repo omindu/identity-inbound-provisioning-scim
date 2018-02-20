@@ -106,16 +106,38 @@ public class AttributeMapper {
                 for (Attribute complexAttribute : complexAttributeList) {
                     Map<String, Attribute> subAttributes =
                             ((ComplexAttribute) complexAttribute).getSubAttributes();
+
                     SimpleAttribute typeAttribute =
                             (SimpleAttribute) subAttributes.get(SCIMConstants.CommonSchemaConstants.TYPE);
+
                     String valueAttriubuteURI;
                     // construct attribute URI
+                    String typeValue ="";
+                    typeValue = (String) typeAttribute.getValue();
                     if (typeAttribute != null) {
-                        String typeValue = (String) typeAttribute.getValue();
                         valueAttriubuteURI = attributeURI + "." + typeValue;
                     } else {
                         valueAttriubuteURI = attributeURI;
                     }
+
+                    for (Map.Entry<String, Attribute> entry : subAttributes.entrySet()) {
+                        if (!entry.getKey().equals(SCIMConstants.CommonSchemaConstants.TYPE)) {
+                            String tempAttrURI;
+                            if (!SCIMConstants.CommonSchemaConstants.VALUE.equals(entry.getKey())) {
+                                tempAttrURI = attributeURI + "." + typeValue + "." + entry.getKey();
+                            } else if (SCIMConstants.CommonSchemaConstants.VALUE.equals(entry.getKey())) {
+                                tempAttrURI = attributeURI + "." + typeValue;
+                            } else {
+                                tempAttrURI = attributeURI;
+                            }
+                            SimpleAttribute valueAttribute = (SimpleAttribute) entry.getValue();
+                            if (valueAttribute.getValue() != null) {
+                                claimsMap.put(tempAttrURI, AttributeUtil.getStringValueOfAttribute(
+                                        valueAttribute.getValue(), valueAttribute.getDataType()));
+                            }
+                        }
+                    }
+
                     SimpleAttribute valueAttribute =
                             (SimpleAttribute) subAttributes.get(SCIMConstants.CommonSchemaConstants.VALUE);
                     if (valueAttribute != null && valueAttribute.getValue() != null) {
